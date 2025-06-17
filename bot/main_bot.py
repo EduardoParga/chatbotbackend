@@ -2,7 +2,7 @@ import aiohttp
 from fuzzywuzzy import fuzz
 from botbuilder.core import ActivityHandler, TurnContext, ConversationState
 
-
+# Palavras-chave principais e respostas
 INTENT_KEYWORDS = {
     "calendario": "O calendário está disponível em: www.exemplo.edu/calendario",
     "boleto": "Acesse o portal do aluno e clique em 'Financeiro'.",
@@ -27,7 +27,7 @@ class AtendimentoBot(ActivityHandler):
         if state is None:
             state = {}
 
-
+        # Processo de matrícula dinâmico
         if state.get("matricula") == "nome":
             state["nome"] = turn_context.activity.text
             state["matricula"] = "email"
@@ -53,19 +53,23 @@ class AtendimentoBot(ActivityHandler):
                 try:
                     async with session.post("http://localhost:8080/api/matriculas", json=payload) as resp:
                         resposta_backend = await resp.text()
-                except Exception:
-                    resposta_backend = "Erro ao registrar matrícula no backend."
-            await turn_context.send_activity(f"{resposta_backend} Sua matrícula foi registrada!")
+                        if resp.status == 200 or resp.status == 201:
+                            await turn_context.send_activity(f"{resposta_backend} Sua matrícula foi registrada!")
+                        else:
+                            await turn_context.send_activity(f"Erro ao registrar matrícula: {resposta_backend}")
+                except Exception as e:
+                    await turn_context.send_activity(f"Erro ao registrar matrícula no backend: {str(e)}")
             state.clear()
             await self.user_state_accessor.set(turn_context, state)
             await self.conversation_state.save_changes(turn_context)
             return
 
+        # Fuzzy matching ultra flexível com prefixo e abreviação
         melhor_intencao = None
         melhor_score = 0
         for palavra, resposta in INTENT_KEYWORDS.items():
             score = fuzz.token_set_ratio(palavra, text)
-
+            # Aceita se a palavra-chave ou seu prefixo está na frase
             if palavra in text or palavra[:5] in text:
                 score = 100
             if score > melhor_score:
