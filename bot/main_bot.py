@@ -2,7 +2,7 @@ import aiohttp
 from fuzzywuzzy import fuzz
 from botbuilder.core import ActivityHandler, TurnContext, ConversationState
 
-# Palavras-chave principais e respostas
+
 INTENT_KEYWORDS = {
     "calendario": "O calendário está disponível em: www.exemplo.edu/calendario",
     "boleto": "Acesse o portal do aluno e clique em 'Financeiro'.",
@@ -27,7 +27,6 @@ class AtendimentoBot(ActivityHandler):
         if state is None:
             state = {}
 
-        # Processo de matrícula dinâmico
         if state.get("matricula") == "nome":
             state["nome"] = turn_context.activity.text
             state["matricula"] = "email"
@@ -64,12 +63,12 @@ class AtendimentoBot(ActivityHandler):
             await self.conversation_state.save_changes(turn_context)
             return
 
-        # Fuzzy matching ultra flexível com prefixo e abreviação
+    
         melhor_intencao = None
         melhor_score = 0
         for palavra, resposta in INTENT_KEYWORDS.items():
             score = fuzz.token_set_ratio(palavra, text)
-            # Aceita se a palavra-chave ou seu prefixo está na frase
+           
             if palavra in text or palavra[:5] in text:
                 score = 100
             if score > melhor_score:
