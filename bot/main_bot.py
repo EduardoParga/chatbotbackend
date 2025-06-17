@@ -51,7 +51,7 @@ class AtendimentoBot(ActivityHandler):
             }
             async with aiohttp.ClientSession() as session:
                 try:
-                    async with session.post("http://localhost:8080/api/matriculas", json=payload) as resp:
+                    async with session.post("https://webappchatbot-ababd4czbpeshcde.westus-01.azurewebsites.net/api/matriculas", json=payload) as resp:
                         resposta_backend = await resp.text()
                         if resp.status == 200 or resp.status == 201:
                             await turn_context.send_activity(f"{resposta_backend} Sua matrícula foi registrada!")
